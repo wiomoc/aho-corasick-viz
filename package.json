@@ -1,0 +1,32 @@
+{
+  "name": "aho-corasick-viz",
+  "version": "1.0.0",
+  "homepage": "https://wiomoc.de",
+  "maintainers": [
+    {
+      "name": "Christoph Walcher",
+      "email": "christoph-wa@gmx.de"
+    }
+  ],
+  "description": "Aho-Corasick Visualisation",
+  "scripts": {
+    "start": "webpack-dev-server --config webpack.dev.js --mode development",
+    "build": "webpack --config webpack.dev.js",
+    "deploy": "aws s3 cp dist s3://wiomoc.de --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --recursive"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "css-loader": "^3.1.0",
+    "file-loader": "^4.2.0",
+    "html-loader": "^0.5.5",
+    "html-webpack-plugin": "^3.2.0",
+    "mini-css-extract-plugin": "^0.8.0",
+    "node-sass": "^4.12.0",
+    "sass-loader": "^7.1.0",
+    "webpack": "^4.39.1",
+    "webpack-cli": "^3.3.6",
+    "webpack-dev-server": "^3.1.14"
+  }
+}

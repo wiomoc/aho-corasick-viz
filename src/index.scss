@@ -1,0 +1,351 @@
+$primary-1: #A3CC3F;
+$primary-2: #90997C;
+$primary-3: #FFED69;
+$primary-4: #A8B0FF;
+$primary-5: #3F72CC;
+$darker-bg: #FFF78C;
+$lighter-bg: #FFFCD9;
+
+#bg {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: -15;
+}
+
+article {
+  display: grid;
+  grid-gap: 35px 50px;
+  justify-items: center;
+  align-items: center;
+  margin: 50px 35px 50px 50px;
+
+  //grid-template-columns: repeat(auto-fit, 25em);
+
+  grid-template-areas: "header header" "edu skill" "social skill";
+
+  @media (max-width: 700px) {
+    grid-template-areas: "header" "skill" "skill" "edu" "social";
+    margin: 13px 13px 7px 13px;
+    max-width: 50em;
+  }
+
+  .header {
+    position: relative;
+    grid-area: header;
+    width: 74%;
+    background-color: $lighter-bg;
+
+    .title {
+      float: left;
+    }
+
+    h1 {
+      position: relative;
+      z-index: 2;
+      display: inline-block;
+      font-family: Teko, serif;
+      font-size: 4.3em;
+      margin: 15px;
+      margin-bottom: 0;
+    }
+
+    h2 {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      @media (min-width: 500px) {
+        margin-left: 140px;
+        margin-right: 50px;
+        font-size: 2.3em;
+
+      }
+      @media (max-width: 500px) {
+        margin-left: 20px;
+        margin-right: 20px;
+        font-size: 2.0em;
+      }
+      font-size: 2.3em;
+      margin-top: 0;
+      color: $primary-5;
+    }
+
+    zig-zag {
+      z-index: 1;
+      display: block;
+      position: relative;
+      width: 380px;
+      height: 3em;
+      top: -65px;
+      left: 30px;
+      color: deeppink;
+      opacity: 0.4;
+
+      @media (max-width: 500px) {
+        display: none;
+      }
+    }
+
+    .avatar-outer {
+      height: 260px;
+      width: 260px;
+      float: right;
+      position: relative;
+    }
+
+    .avatar {
+      height: 260px;
+      width: 260px;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      z-index: 4;
+    }
+
+    .zig-zag-border:before {
+      @media (min-width: 500px) {
+        background: linear-gradient(45deg, $lighter-bg 13px, transparent 0), linear-gradient(135deg, $lighter-bg 13px, transparent 0);
+        background-repeat: repeat-y;
+        width: 26px;
+        height: 260px;
+        bottom: 0;
+        background-position: left top;
+        background-size: 24px 26px;
+        content: " ";
+        display: block;
+        position: absolute;
+        left: 0;
+        z-index: 5;
+      }
+      @media (max-width: 500px) {
+        background: linear-gradient(-45deg, transparent 26px, $lighter-bg 0), linear-gradient(45deg, transparent 26px, $lighter-bg 0);
+        width: 260px;
+        height: 26px;
+        top: 0;
+        background-position: left top;
+        background-size: 26px 26px;
+        content: " ";
+        display: block;
+        position: absolute;
+        left: 0;
+        z-index: 5;
+      }
+
+
+    }
+
+
+    #imprint-link {
+      position: absolute;
+      z-index: 100;
+      right: 10px;
+      bottom: 8px;
+
+      color: $primary-5;
+      font-family: Arial, sans-serif;
+      text-decoration: none;
+    }
+  }
+}
+
+#section-edu {
+  grid-area: edu;
+  width: 22rem;
+
+  .underline {
+    background-color: $primary-4;
+  }
+}
+
+#section-social {
+  grid-area: social;
+  width: 22rem;
+
+  .underline {
+    background-color: $primary-1;
+  }
+}
+
+#section-skill {
+  width: 20rem;
+  grid-area: skill;
+
+  .underline {
+    background-color: $primary-3;
+  }
+}
+
+section {
+  background-color: $lighter-bg;
+  position: relative;
+
+  header {
+    position: relative;
+    top: -20px;
+    left: -3px;
+
+    h2 {
+      position: relative;
+      z-index: 2;
+      font-family: Teko, serif;
+      font-size: 3.5em;
+      margin: 0;
+    }
+
+    .underline {
+      z-index: 1;
+      position: relative;
+      width: 200px;
+      height: 2em;
+      top: -40px;
+      left: -5px;
+    }
+  }
+
+  .social-items {
+    margin-top: -30px;
+    padding-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+
+    .social-item {
+      font-size: 1.4em;
+      font-family: Arial, sans-serif;
+      font-weight: bold;
+      color: $primary-5;
+      list-style-type: none;
+      margin: 0.1em;
+
+      a, a:visited {
+        text-decoration: none;
+        color: $primary-5;
+      }
+
+
+      .social-detail {
+        display: none;
+        color: $primary-2;
+      }
+
+      &:hover {
+        a {
+          text-decoration: underline;
+        }
+
+        .social-detail {
+          display: inline;
+        }
+      }
+    }
+  }
+
+  .skill-items {
+    margin-top: -30px;
+
+    .skill-item {
+      font-size: 1.5em;
+      font-family: Arial, sans-serif;
+      font-weight: bold;
+      color: $primary-5;
+      list-style-type: none;
+
+      star-rating {
+        color: $primary-2;
+      }
+
+      + .skill-item {
+        margin-top: 0.7em;
+      }
+    }
+  }
+
+  .edu-items {
+    margin-top: -30px;
+    margin-right: 1.5em;
+
+    .edu-item {
+      font-size: 1.4em;
+      font-family: Arial, sans-serif;
+      font-weight: bold;
+      color: $primary-5;
+      list-style-type: none;
+
+      .edu-detail {
+        text-align: center;
+        font-size: 0.8em;
+      }
+
+      .edu-city {
+        font-weight: lighter;
+        font-size: 1em;
+        font-style: italic;
+        color: $primary-2;
+      }
+
+      .edu-time {
+        float: right;
+        margin-top: 0.15em;
+        font-weight: lighter;
+        font-size: 0.8em;
+        font-style: italic;
+        color: $primary-2;
+      }
+    }
+  }
+}
+
+footer {
+  text-align: right;
+  margin-bottom: 10px;
+  display: table-footer-group;
+  font-family: Helvetica, sans-serif;
+  color: $primary-5;
+
+  a {
+    text-decoration: none;
+  }
+}
+
+.fa-icon {
+  display: inline-block;
+  font-size: inherit;
+  height: 1em;
+  overflow: visible;
+  vertical-align: -0.125em;
+}
+
+
+.imprint-closed {
+  display: none;
+}
+
+.imprint-open {
+  display: block;
+  z-index: 10;
+
+  background-color: #808080E0;
+
+  position: absolute;
+  top: 10vh;
+  bottom: 50px;
+  left: 15vw;
+  right: 15vw;
+
+  iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+}
+
+.imprint-close-button {
+  font-size: 30px;
+  color: #EFEFEF;
+
+  position: absolute;
+  top: 5px;
+  right: 10px;
+}
+
