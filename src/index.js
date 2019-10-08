@@ -8,7 +8,6 @@ class Node {
         this.char = char;
         this.nextNodesByChar = new Map();
         this.suffixLink = null;
-        this.suffixLinkDepth = -1;
         this.endSuffixLinks = [];
         this.wordEndings = []
     }
@@ -37,7 +36,7 @@ class Node {
         });
 
         if (childHeight) {
-            childHeight += 80
+            childHeight += HEIGHT / 2
         }
 
         this.leftOffset = (Math.max(WIDTH, childWidth) - WIDTH) / 2;
@@ -57,12 +56,12 @@ class Node {
         });
     }
 
-    render(svg) {
+    renderTo(svg) {
         let circle = document.createElementNS(SVG_NS, "circle");
         circle.setAttribute('cx', this.posX);
         circle.setAttribute('cy', this.posY);
         circle.setAttribute('r', RADIUS);
-        circle.setAttribute('style', 'fill: white; stroke: blue; stroke-width: 3px;');
+        circle.setAttribute('style', `fill: ${this.wordEndings.length === 0 ? 'white' : 'lightgrey'}; stroke: blue; stroke-width: 3px;`);
 
         let text = document.createElementNS(SVG_NS, "text");
         text.setAttribute('x', this.posX + 1);
@@ -72,22 +71,21 @@ class Node {
         text.setAttribute('style', 'fill: red; font-family: Arial, sans-serif; font-size: 25px');
         text.innerHTML = this.char;
 
-
         this.nextNodesByChar.forEach(next => {
-            let line = new Line(this.posX - 4, this.posY, next.posX - 4, next.posY, 'stroke:rgb(255,0,0);stroke-width:2');
+            let line = new Line(this.posX, this.posY, next.posX, next.posY, 'stroke:rgb(0,0,0);stroke-width:2');
             line.shorten(RADIUS);
             line.renderTo(svg);
-            next.render(svg);
+            next.renderTo(svg);
         });
 
         if (this.suffixLink) {
-            let line = new Line(this.posX, this.posY, this.suffixLink.posX, this.suffixLink.posY, 'stroke:rgb(0,255,0);stroke-width:2');
+            let line = new Line(this.posX, this.posY, this.suffixLink.posX, this.suffixLink.posY, 'stroke:rgb(0,0,255);stroke-width:2', -5);
             line.shorten(RADIUS);
             line.renderTo(svg)
         }
 
         this.endSuffixLinks.forEach(next => {
-            let line = new Line(this.posX, this.posY + 4, next.posX, next.posY, 'stroke:rgb(0,0,255);stroke-width:2');
+            let line = new Line(this.posX, this.posY, next.posX, next.posY, 'stroke:rgb(0,255,0);stroke-width:2', -10);
             line.shorten(RADIUS);
             line.renderTo(svg)
         });
@@ -98,16 +96,44 @@ class Node {
 }
 
 class Line {
-    constructor(x1, y1, x2, y2, style) {
+    constructor(x1, y1, x2, y2, style, shift = null) {
         this.x1 = x1;
         this.y1 = y1;
         this.x2 = x2;
         this.y2 = y2;
         this.style = style;
-        this.length = Math.sqrt(Math.pow(this.x2 - this.x1, 2) + Math.pow(this.y2 - this.y1, 2));
+        this.length = Math.sqrt((this.x2 - this.x1) * (this.x2 - this.x1) + (this.y2 - this.y1) * (this.y2 - this.y1));
+        this.shift = shift;
     }
 
     renderTo(svg) {
+        const xBase = (this.x1 - this.x2) / this.length;
+        const yBase = (this.y1 - this.y2) / this.length;
+
+        let angle = Math.acos(xBase);
+        if (yBase < 0) {
+            angle = Math.PI - angle
+        }
+
+        const normalX = Math.cos(angle + Math.PI / 2);
+        const normalY = Math.sin(angle + Math.PI / 2);
+
+        if (this.shift) {
+            this.x1 += this.shift * normalX;
+            this.y1 += this.shift * normalY;
+            this.x2 += this.shift * normalX;
+            this.y2 += this.shift * normalY;
+        }
+
+        let baseArrowX = this.x2 + xBase * 10;
+        let baseArrowY = this.y2 + yBase * 10;
+
+        let leftArrowX = baseArrowX + normalX * 5;
+        let leftArrowY = baseArrowY + normalY * 5;
+
+        let rightArrowX = baseArrowX + normalX * -5;
+        let rightArrowY = baseArrowY + normalY * -5;
+
         let line = document.createElementNS(SVG_NS, 'line');
         line.setAttribute('x1', this.x1);
         line.setAttribute('y1', this.y1);
@@ -115,20 +141,6 @@ class Line {
         line.setAttribute('y2', this.y2);
         line.setAttribute('style', this.style);
         svg.appendChild(line);
-
-
-        const xBase = (this.x1 - this.x2) / this.length;
-        const yBase = (this.y1 - this.y2) / this.length;
-        let baseArrowX = this.x2 + xBase * 10;
-        let baseArrowY = this.y2 + yBase * 10;
-        let angleX = Math.acos(xBase);
-        let angleY = Math.asin(yBase);
-        let leftArrowX = baseArrowX + Math.cos(angleY + Math.PI / 2) * 5;
-        let leftArrowY = baseArrowY + Math.sin(angleX + Math.PI / 2) * 5;
-
-        let rightArrowX = baseArrowX + Math.cos(angleY + Math.PI / 2) * -5;
-        let rightArrowY = baseArrowY + Math.sin(angleX + Math.PI / 2) * -5;
-
 
         let arrowLeftLine = document.createElementNS(SVG_NS, 'line');
         arrowLeftLine.setAttribute('x1', leftArrowX);
@@ -156,7 +168,6 @@ class Line {
 
         this.length = newLength;
     }
-
 }
 
 class Graph {
@@ -190,9 +201,8 @@ class Graph {
                     node.nextNodesByChar.forEach((next2) => {
                         this.findSuffixLink(next2, next)
                     });
-                    if (next.depth > node.suffixLinkDepth) {
+                    if (!node.suffixLink || next.depth > node.suffixLink.depth) {
                         node.suffixLink = next;
-                        node.suffixLinkDepth = next.depth;
                     }
 
                     if (next.wordEndings.length > 0) {
@@ -225,25 +235,70 @@ class Graph {
         svg.setAttribute('width', width);
 
         this.root.calcPosition();
-        this.root.render(svg);
+        this.root.renderTo(svg);
         return svg;
     }
 }
 
 
-const graph = new Graph();
-graph.addWord("a");
-graph.addWord("ab");
-graph.addWord("bab");
-graph.addWord("bc");
-graph.addWord("bca");
-graph.addWord("c");
-graph.addWord("caa");
-graph.addWord("dca");
-graph.finish();
+const words = [
+    "a",
+    "ab",
+    "bab",
+    "bc",
+    "bca",
+    "c",
+    "caa"
+];
 
-console.log(graph.root);
-console.log(graph.root.calcLayout());
+const wordsElement = document.getElementById("words");
 
-document.body.appendChild(graph.createSVG());
+function renderWordListItem(word) {
+    const wordElement = document.createElement("div");
+    const wordDeleteElement = document.createElement("a");
+    wordDeleteElement.innerText = "X";
+    wordDeleteElement.addEventListener("click", () => {
+        words.splice(words.lastIndexOf(word), 1);
+        wordsElement.removeChild(wordElement);
+        renderGraph();
+    }, {once: true});
+    const wordInputElement = document.createElement("input");
+    wordInputElement.value = word;
+    wordElement.appendChild(wordInputElement);
+    wordElement.appendChild(wordDeleteElement);
+    wordsElement.appendChild(wordElement);
+}
 
+function renderWordList() {
+    words.forEach(word => {
+        renderWordListItem(word)
+    });
+}
+
+renderWordList();
+
+const newWordInputElement = document.getElementById("newWordInput");
+document.getElementById("newWordSubmit").addEventListener("click", (e) => {
+    e.preventDefault();
+    let newWord = newWordInputElement.value;
+    words.push(newWord);
+    renderWordListItem(newWord);
+    newWordInputElement.value = "";
+    renderGraph();
+    return false;
+}, false);
+
+let graphElement = document.getElementById("graph");
+
+function renderGraph() {
+    const graph = new Graph();
+    words.forEach(word => {
+        graph.addWord(word);
+    });
+    graph.finish();
+
+    graphElement.innerHTML = "";
+    graphElement.appendChild(graph.createSVG());
+}
+
+renderGraph();
