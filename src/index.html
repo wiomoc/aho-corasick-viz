@@ -11,13 +11,23 @@
     <meta name="revisit-After" content="7 days">
 </head>
 <body>
-<div id="graph">
-
-</div>
-<div id="words">
-    <form><input id="newWordInput"><input id="newWordSubmit" type="submit" value="+"></form>
-</div>
-
+<header>
+    <h1>Aho-Corasick</h1>
+    <input type="button" id="play-pause-button" value="Match ▶">️
+</header>
+<article>
+    <div id="input-graph">
+        <input id="text-input">
+        <table id="match-result"></table>
+        <div id="graph"></div>
+    </div>
+    <div id="words">
+        <form><input id="new-word-input"><input id="new-word-submit" type="submit" value="➕"></form>
+    </div>
+</article>
+<footer>
+    <a href="https://en.wikipedia.org/wiki/Aho%E2%80%93Corasick_algorithm">Aho-Corasick on Wikipedia</a>
+</footer>
 </body>
 
 </html>

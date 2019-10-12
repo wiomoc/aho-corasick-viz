@@ -8,7 +8,7 @@
       "email": "christoph-wa@gmx.de"
     }
   ],
-  "description": "Aho-Corasick Visualisation",
+  "description": "Aho-Corasick Visualizer",
   "scripts": {
     "start": "webpack-dev-server --config webpack.dev.js --mode development",
     "build": "webpack --config webpack.dev.js",

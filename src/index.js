@@ -1,4 +1,6 @@
-const SVG_NS = "http://www.w3.org/2000/svg";
+import './index.scss'
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
 const RADIUS = 25;
 const HEIGHT = 80;
 const WIDTH = 100;
@@ -57,13 +59,13 @@ class Node {
     }
 
     renderTo(svg) {
-        let circle = document.createElementNS(SVG_NS, "circle");
+        let circle = document.createElementNS(SVG_NS, 'circle');
         circle.setAttribute('cx', this.posX);
         circle.setAttribute('cy', this.posY);
         circle.setAttribute('r', RADIUS);
         circle.setAttribute('style', `fill: ${this.wordEndings.length === 0 ? 'white' : 'lightgrey'}; stroke: blue; stroke-width: 3px;`);
 
-        let text = document.createElementNS(SVG_NS, "text");
+        let text = document.createElementNS(SVG_NS, 'text');
         text.setAttribute('x', this.posX + 1);
         text.setAttribute('y', this.posY + 5);
         text.setAttribute('text-anchor', 'middle');
@@ -238,31 +240,109 @@ class Graph {
         this.root.renderTo(svg);
         return svg;
     }
+
+    matchText(text) {
+        let currentNode = this.root;
+        let actions = [];
+
+        for (let char of text) {
+            let subActions = [];
+
+            while (true) {
+                let next = currentNode.nextNodesByChar.get(char);
+                if (next) {
+                    let subMoveAction = {
+                        move: {
+                            from: currentNode,
+                            to: next
+                        }
+                    };
+                    subActions.push(subMoveAction);
+
+                    next.wordEndings.forEach(wordEnding => {
+
+                        let subEndingAction = {
+                            ending: wordEnding
+                        };
+                        subActions.push(subEndingAction)
+                    });
+                    next.endSuffixLinks.forEach(next => {
+                        next.wordEndings.forEach(wordEnding => {
+
+                            let subEndingAction = {
+                                ending: wordEnding
+                            };
+                            subActions.push(subEndingAction)
+                        });
+                    });
+
+                    currentNode = next;
+
+                    break
+                } else if (currentNode.suffixLink) {
+                    let subMoveAction = {
+                        move: {
+                            from: currentNode,
+                            to: currentNode.suffixLink
+                        }
+                    };
+
+                    currentNode = currentNode.suffixLink;
+
+                    subActions.push(subMoveAction);
+                } else if (currentNode === this.root) {
+                    let subDropAction = {
+                        drop: true
+                    };
+                    subActions.push(subDropAction);
+                    break;
+                } else {
+                    let subMoveAction = {
+                        move: {
+                            from: currentNode,
+                            to: this.root
+                        }
+                    };
+
+                    currentNode = this.root;
+                    subActions.push(subMoveAction);
+                }
+            }
+
+            let action = {
+                char,
+                subActions
+            };
+            actions.push(action)
+        }
+
+        return actions;
+    }
 }
 
 
 const words = [
-    "a",
-    "ab",
-    "bab",
-    "bc",
-    "bca",
-    "c",
-    "caa"
+    'a',
+    'ab',
+    'bab',
+    'bc',
+    'bca',
+    'c',
+    'caa'
 ];
 
-const wordsElement = document.getElementById("words");
+const wordsElement = document.getElementById('words');
 
 function renderWordListItem(word) {
-    const wordElement = document.createElement("div");
-    const wordDeleteElement = document.createElement("a");
-    wordDeleteElement.innerText = "X";
-    wordDeleteElement.addEventListener("click", () => {
+    const wordElement = document.createElement('div');
+    const wordDeleteElement = document.createElement('a');
+    wordDeleteElement.innerText = '❌';
+    wordDeleteElement.addEventListener('click', () => {
         words.splice(words.lastIndexOf(word), 1);
         wordsElement.removeChild(wordElement);
         renderGraph();
     }, {once: true});
-    const wordInputElement = document.createElement("input");
+    const wordInputElement = document.createElement('input');
     wordInputElement.value = word;
     wordElement.appendChild(wordInputElement);
     wordElement.appendChild(wordDeleteElement);
@@ -277,28 +357,79 @@ function renderWordList() {
 
 renderWordList();
 
-const newWordInputElement = document.getElementById("newWordInput");
-document.getElementById("newWordSubmit").addEventListener("click", (e) => {
+const matchResultElement = document.getElementById('match-result');
+const textInputElement = document.getElementById('text-input');
+document.getElementById('play-pause-button').addEventListener('click', matchText);
+
+function matchText() {
+    matchResultElement.innerHTML = '';
+    matchResultElement.style.marginTop = '-1.6rem';
+    const tr = document.createElement("tr");
+
+    let textInput = textInputElement.value;
+    for (let char of textInput) {
+        const td = document.createElement("td");
+        td.innerText = char;
+        td.className = 'hidden-char';
+        tr.appendChild(td)
+    }
+    matchResultElement.appendChild(tr);
+
+    let trByWord = new Map();
+
+    for (let word of words) {
+        const tr = document.createElement("tr");
+        trByWord.set(word, tr);
+        matchResultElement.appendChild(tr);
+        for (let char of textInput) {
+            const td = document.createElement("td");
+            tr.appendChild(td)
+        }
+    }
+
+    let actions = graph.matchText(textInput);
+    let i = 0;
+    for (let action of actions) {
+        for (let subAction of action.subActions) {
+            let {ending} = subAction;
+            let tr = trByWord.get(ending);
+            if (ending) {
+                for (let b = i - ending.length + 1; b <= i; b++) {
+                    tr.childNodes[b].style.backgroundColor = "red";
+                }
+            }
+        }
+        i++;
+    }
+}
+
+
+const newWordInputElement = document.getElementById('new-word-input');
+document.getElementById('new-word-submit').addEventListener('click', (e) => {
     e.preventDefault();
     let newWord = newWordInputElement.value;
     words.push(newWord);
     renderWordListItem(newWord);
-    newWordInputElement.value = "";
+    newWordInputElement.value = '';
     renderGraph();
     return false;
 }, false);
 
-let graphElement = document.getElementById("graph");
+let graphElement = document.getElementById('graph');
+
+let graph;
 
 function renderGraph() {
-    const graph = new Graph();
-    words.forEach(word => {
+    graph = new Graph();
+
+    for (let word of words) {
         graph.addWord(word);
-    });
+    }
     graph.finish();
 
-    graphElement.innerHTML = "";
+    graphElement.innerHTML = '';
     graphElement.appendChild(graph.createSVG());
+    matchText();
 }
 
 renderGraph();
