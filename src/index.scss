@@ -37,6 +37,10 @@ article {
         padding: 0;
         margin: 0;
       }
+
+      .found-char {
+        height: 6px;
+      }
     }
 
   }
@@ -45,5 +49,15 @@ article {
     margin-left: 30px;
     display: inline-block;
     vertical-align: top;
+  }
+
+  .word-item-text {
+    display: inline-block;
+    padding: 3px;
+    color: white;
+    width: 200px;
+    font-size: 1.5rem;
+    font-family: Helvetica, sans-serif;
+
   }
 }

@@ -1,4 +1,6 @@
 import './index.scss'
+import './colors'
+import getNewColor from "./colors";
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const RADIUS = 25;
@@ -321,20 +323,15 @@ class Graph {
 }
 
 
-const words = [
-    'a',
-    'ab',
-    'bab',
-    'bc',
-    'bca',
-    'c',
-    'caa'
-];
+const words = [];
 
 const wordsElement = document.getElementById('words');
 
-function renderWordListItem(word) {
+function addAndRenderWordListItem(word) {
+    let color = getNewColor();
+    words.push({word, color});
     const wordElement = document.createElement('div');
+    wordElement.style.backgroundColor = color;
     const wordDeleteElement = document.createElement('a');
     wordDeleteElement.innerText = '❌';
     wordDeleteElement.addEventListener('click', () => {
@@ -342,20 +339,22 @@ function renderWordListItem(word) {
         wordsElement.removeChild(wordElement);
         renderGraph();
     }, {once: true});
-    const wordInputElement = document.createElement('input');
-    wordInputElement.value = word;
+    const wordInputElement = document.createElement('span');
+    wordInputElement.textContent = word;
+    wordInputElement.className = "word-item-text";
     wordElement.appendChild(wordInputElement);
     wordElement.appendChild(wordDeleteElement);
     wordsElement.appendChild(wordElement);
 }
 
-function renderWordList() {
-    words.forEach(word => {
-        renderWordListItem(word)
-    });
+function renderInitialWordList() {
+    ['a', 'ab', 'bab', 'bc', 'bca', 'c', 'caa']
+        .forEach(word => {
+            addAndRenderWordListItem(word)
+        });
 }
 
-renderWordList();
+renderInitialWordList();
 
 const matchResultElement = document.getElementById('match-result');
 const textInputElement = document.getElementById('text-input');
@@ -363,10 +362,13 @@ document.getElementById('play-pause-button').addEventListener('click', matchText
 
 function matchText() {
     matchResultElement.innerHTML = '';
-    matchResultElement.style.marginTop = '-1.6rem';
+
     const tr = document.createElement("tr");
 
     let textInput = textInputElement.value;
+    if (textInput.length > 0) {
+        matchResultElement.style.marginTop = '-1.6rem';
+    }
     for (let char of textInput) {
         const td = document.createElement("td");
         td.innerText = char;
@@ -375,11 +377,11 @@ function matchText() {
     }
     matchResultElement.appendChild(tr);
 
-    let trByWord = new Map();
+    let trAndColorByWord = new Map();
 
-    for (let word of words) {
+    for (let {word, color} of words) {
         const tr = document.createElement("tr");
-        trByWord.set(word, tr);
+        trAndColorByWord.set(word, {tr, color});
         matchResultElement.appendChild(tr);
         for (let char of textInput) {
             const td = document.createElement("td");
@@ -392,10 +394,12 @@ function matchText() {
     for (let action of actions) {
         for (let subAction of action.subActions) {
             let {ending} = subAction;
-            let tr = trByWord.get(ending);
             if (ending) {
+                let {tr, color} = trAndColorByWord.get(ending);
                 for (let b = i - ending.length + 1; b <= i; b++) {
-                    tr.childNodes[b].style.backgroundColor = "red";
+                    const td = tr.childNodes[b];
+                    td.style.backgroundColor = color;
+                    td.className = 'found-char'
                 }
             }
         }
@@ -408,8 +412,7 @@ const newWordInputElement = document.getElementById('new-word-input');
 document.getElementById('new-word-submit').addEventListener('click', (e) => {
     e.preventDefault();
     let newWord = newWordInputElement.value;
-    words.push(newWord);
-    renderWordListItem(newWord);
+    addAndRenderWordListItem(newWord);
     newWordInputElement.value = '';
     renderGraph();
     return false;
@@ -422,7 +425,7 @@ let graph;
 function renderGraph() {
     graph = new Graph();
 
-    for (let word of words) {
+    for (let {word} of words) {
         graph.addWord(word);
     }
     graph.finish();
