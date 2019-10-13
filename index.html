@@ -1,0 +1,33 @@
+<!DOCTYPE>
+<html lang="en">
+<head>
+    <title>Aho-Corasick visualisation</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="Christoph Walcher">
+    <meta name="description" content="Aho-Corasick visualisation">
+    <meta name="keywords" content="Aho-Corasick">
+    <meta name="robots" content="index,follow">
+    <meta name="revisit-After" content="7 days">
+<link href="index.css" rel="stylesheet"></head>
+<body>
+<header>
+    <h1>Aho-Corasick</h1>
+    <input type="button" id="play-pause-button" value="Match ▶">️
+</header>
+<article>
+    <div id="input-graph">
+        <input id="text-input" value="abccab">
+        <table id="match-result"></table>
+        <div id="graph"></div>
+    </div>
+    <div id="words">
+        <form><input id="new-word-input"><input id="new-word-submit" type="submit" value="➕"></form>
+    </div>
+</article>
+<footer>
+    <a href="https://en.wikipedia.org/wiki/Aho%E2%80%93Corasick_algorithm">Aho-Corasick on Wikipedia</a>
+</footer>
+<script type="text/javascript" src="index.js"></script></body>
+
+</html>
