@@ -41,6 +41,11 @@ article {
       .found-char {
         height: 6px;
       }
+
+      .found-char-last {
+        background-clip: content-box;
+        padding: 0 1px 0 0;
+      }
     }
 
   }

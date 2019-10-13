@@ -399,7 +399,11 @@ function matchText() {
                 for (let b = i - ending.length + 1; b <= i; b++) {
                     const td = tr.childNodes[b];
                     td.style.backgroundColor = color;
-                    td.className = 'found-char'
+                    td.className = 'found-char';
+
+                    if (b === i) {
+                        td.className += ' found-char-last'
+                    }
                 }
             }
         }
