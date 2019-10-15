@@ -327,9 +327,10 @@ const words = [];
 
 const wordsElement = document.getElementById('words');
 
-function addAndRenderWordListItem(word) {
+function addAndRenderWordListItem(wordText) {
     let color = getNewColor();
-    words.push({word, color});
+    let word = {word: wordText, color};
+    words.push(word);
     const wordElement = document.createElement('div');
     wordElement.style.backgroundColor = color;
     const wordDeleteElement = document.createElement('a');
@@ -338,9 +339,10 @@ function addAndRenderWordListItem(word) {
         words.splice(words.lastIndexOf(word), 1);
         wordsElement.removeChild(wordElement);
         renderGraph();
+        matchText();
     }, {once: true});
     const wordInputElement = document.createElement('span');
-    wordInputElement.textContent = word;
+    wordInputElement.textContent = wordText;
     wordInputElement.className = "word-item-text";
     wordElement.appendChild(wordInputElement);
     wordElement.appendChild(wordDeleteElement);
