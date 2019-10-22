@@ -272,6 +272,7 @@ class Graph {
                         next.wordEndings.forEach(wordEnding => {
 
                             let subEndingAction = {
+                                node: next,
                                 ending: wordEnding
                             };
                             subActions.push(subEndingAction)
@@ -294,7 +295,8 @@ class Graph {
                     subActions.push(subMoveAction);
                 } else if (currentNode === this.root) {
                     let subDropAction = {
-                        drop: true
+                        drop: true,
+                        node: this.root,
                     };
                     subActions.push(subDropAction);
                     break;
@@ -323,7 +325,7 @@ class Graph {
 }
 
 
-const words = [];
+let words = [];
 
 const wordsElement = document.getElementById('words');
 
@@ -336,7 +338,7 @@ function addAndRenderWordListItem(wordText) {
     const wordDeleteElement = document.createElement('a');
     wordDeleteElement.innerText = '❌';
     wordDeleteElement.addEventListener('click', () => {
-        words.splice(words.lastIndexOf(word), 1);
+        words = words.filter(value => value.word !== wordText);
         wordsElement.removeChild(wordElement);
         renderGraph();
         matchText();
@@ -361,6 +363,9 @@ renderInitialWordList();
 const matchResultElement = document.getElementById('match-result');
 const textInputElement = document.getElementById('text-input');
 document.getElementById('play-pause-button').addEventListener('click', matchText);
+document.getElementById('text-input').addEventListener('input', matchText);
+
+let actions;
 
 function matchText() {
     matchResultElement.innerHTML = '';
@@ -391,7 +396,7 @@ function matchText() {
         }
     }
 
-    let actions = graph.matchText(textInput);
+    actions = graph.matchText(textInput);
     let i = 0;
     for (let action of actions) {
         for (let subAction of action.subActions) {
@@ -413,20 +418,8 @@ function matchText() {
     }
 }
 
-
-const newWordInputElement = document.getElementById('new-word-input');
-document.getElementById('new-word-submit').addEventListener('click', (e) => {
-    e.preventDefault();
-    let newWord = newWordInputElement.value;
-    addAndRenderWordListItem(newWord);
-    newWordInputElement.value = '';
-    renderGraph();
-    return false;
-}, false);
-
-let graphElement = document.getElementById('graph');
-
 let graph;
+let graphElement = document.getElementById('graph');
 
 function renderGraph() {
     graph = new Graph();
@@ -438,7 +431,51 @@ function renderGraph() {
 
     graphElement.innerHTML = '';
     graphElement.appendChild(graph.createSVG());
-    matchText();
 }
 
 renderGraph();
+matchText();
+
+const newWordInputElement = document.getElementById('new-word-input');
+document.getElementById('new-word-submit').addEventListener('click', (e) => {
+    e.preventDefault();
+    let newWord = newWordInputElement.value;
+    addAndRenderWordListItem(newWord);
+    newWordInputElement.value = '';
+    renderGraph();
+    matchText();
+    return false;
+}, false);
+
+
+function animate(actions) {
+    let actionIndex = 0;
+    let subActionIndex = 0;
+
+    const animationContinuation = () => {
+        let currentAction = actions[actionIndex];
+        animateSubAction(currentAction.char, currentAction.subActions[subActionIndex]);
+        subActionIndex++;
+        if (subActionIndex >= currentAction.subActions.length) {
+            actionIndex++;
+            subActionIndex = 0;
+        }
+        if (actionIndex < actions.length) {
+            setTimeout(animationContinuation, 1000);
+        }
+    };
+
+    if (actions.length > 0) {
+        animationContinuation();
+    }
+}
+
+function animateSubAction(char, action) {
+    if (action.drop) {
+
+    } else if (action.move) {
+
+    } else if (action.ending) {
+
+    }
+}

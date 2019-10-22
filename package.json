@@ -13,7 +13,7 @@
     "start": "webpack-dev-server --config webpack.dev.js --mode development",
     "build": "webpack --config webpack.dev.js",
     "deployAWS": "aws s3 cp dist s3://wiomoc.de/aho-corasick-viz --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --recursive",
-    "deployGH": "rm -rf dist/ ; git worktree add dist gh-pages && webpack --config webpack.dev.js && cd dist/ && git add . && git commit -m \"Release\" && git push -u origin gh-pages && cd .. && git worktree prune"
+    "deployGH": "rm -rf dist/; git worktree prune; git worktree add dist gh-pages && webpack --config webpack.dev.js && cd dist/ && git add . && git commit -m \"Release\" && git push -u origin gh-pages && cd .. && git worktree prune"
   },
   "keywords": [],
   "license": "BSD",
