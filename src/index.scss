@@ -26,6 +26,12 @@ article {
       margin: 0;
     }
 
+    #text-progress {
+      display: none;
+      height: 4px;
+      background-color: blue;
+    }
+
     #match-result {
       border-spacing: 0 3px;
 

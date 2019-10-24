@@ -1,8 +1,10 @@
 import './index.scss'
 import './colors'
 import getNewColor from "./colors";
+import Line from "./graphic/Line";
+import Text from "./graphic/Text";
+import {SVG_NS} from "./graphic/svg";
 
-const SVG_NS = 'http://www.w3.org/2000/svg';
 const RADIUS = 25;
 const HEIGHT = 80;
 const WIDTH = 100;
@@ -16,7 +18,7 @@ class Node {
         this.wordEndings = []
     }
 
-    addNextNode(node, isLink = false) {
+    addNextNode(node) {
         this.nextNodesByChar.set(node.char, node);
     }
 
@@ -67,13 +69,8 @@ class Node {
         circle.setAttribute('r', RADIUS);
         circle.setAttribute('style', `fill: ${this.wordEndings.length === 0 ? 'white' : 'lightgrey'}; stroke: blue; stroke-width: 3px;`);
 
-        let text = document.createElementNS(SVG_NS, 'text');
-        text.setAttribute('x', this.posX + 1);
-        text.setAttribute('y', this.posY + 5);
-        text.setAttribute('text-anchor', 'middle');
-        text.setAttribute('alignment-baseline', 'central');
-        text.setAttribute('style', 'fill: red; font-family: Arial, sans-serif; font-size: 25px');
-        text.innerHTML = this.char;
+        let text = new Text(this.posX + 1, this.posY + 5, this.char, 'red', 25);
+
 
         this.nextNodesByChar.forEach(next => {
             let line = new Line(this.posX, this.posY, next.posX, next.posY, 'stroke:rgb(0,0,0);stroke-width:2');
@@ -95,82 +92,7 @@ class Node {
         });
 
         svg.appendChild(circle);
-        svg.appendChild(text);
-    }
-}
-
-class Line {
-    constructor(x1, y1, x2, y2, style, shift = null) {
-        this.x1 = x1;
-        this.y1 = y1;
-        this.x2 = x2;
-        this.y2 = y2;
-        this.style = style;
-        this.length = Math.sqrt((this.x2 - this.x1) * (this.x2 - this.x1) + (this.y2 - this.y1) * (this.y2 - this.y1));
-        this.shift = shift;
-    }
-
-    renderTo(svg) {
-        const xBase = (this.x1 - this.x2) / this.length;
-        const yBase = (this.y1 - this.y2) / this.length;
-
-        let angle = Math.acos(xBase);
-        if (yBase < 0) {
-            angle = Math.PI - angle
-        }
-
-        const normalX = Math.cos(angle + Math.PI / 2);
-        const normalY = Math.sin(angle + Math.PI / 2);
-
-        if (this.shift) {
-            this.x1 += this.shift * normalX;
-            this.y1 += this.shift * normalY;
-            this.x2 += this.shift * normalX;
-            this.y2 += this.shift * normalY;
-        }
-
-        let baseArrowX = this.x2 + xBase * 10;
-        let baseArrowY = this.y2 + yBase * 10;
-
-        let leftArrowX = baseArrowX + normalX * 5;
-        let leftArrowY = baseArrowY + normalY * 5;
-
-        let rightArrowX = baseArrowX + normalX * -5;
-        let rightArrowY = baseArrowY + normalY * -5;
-
-        let line = document.createElementNS(SVG_NS, 'line');
-        line.setAttribute('x1', this.x1);
-        line.setAttribute('y1', this.y1);
-        line.setAttribute('x2', this.x2);
-        line.setAttribute('y2', this.y2);
-        line.setAttribute('style', this.style);
-        svg.appendChild(line);
-
-        let arrowLeftLine = document.createElementNS(SVG_NS, 'line');
-        arrowLeftLine.setAttribute('x1', leftArrowX);
-        arrowLeftLine.setAttribute('y1', leftArrowY);
-        arrowLeftLine.setAttribute('x2', this.x2);
-        arrowLeftLine.setAttribute('y2', this.y2);
-        arrowLeftLine.setAttribute('style', this.style);
-
-        svg.appendChild(arrowLeftLine);
-
-        let arrowRightLine = document.createElementNS(SVG_NS, 'line');
-        arrowRightLine.setAttribute('x1', rightArrowX);
-        arrowRightLine.setAttribute('y1', rightArrowY);
-        arrowRightLine.setAttribute('x2', this.x2);
-        arrowRightLine.setAttribute('y2', this.y2);
-        arrowRightLine.setAttribute('style', this.style);
-
-        svg.appendChild(arrowRightLine);
-    }
-
-    shorten(length) {
-        const newLength = this.length - length;
-        this.y2 = this.y1 + ((this.y2 - this.y1) / this.length) * newLength;
-        this.x2 = this.x1 + ((this.x2 - this.x1) / this.length) * newLength;
-
-        this.length = newLength;
+        text.renderTo(svg);
     }
 }
 
@@ -262,8 +184,9 @@ class Graph {
                     subActions.push(subMoveAction);
 
                     next.wordEndings.forEach(wordEnding => {
-
                         let subEndingAction = {
+                            node: next,
+
                             ending: wordEnding
                         };
                         subActions.push(subEndingAction)
@@ -362,7 +285,7 @@ renderInitialWordList();
 
 const matchResultElement = document.getElementById('match-result');
 const textInputElement = document.getElementById('text-input');
-document.getElementById('play-pause-button').addEventListener('click', matchText);
+document.getElementById('play-pause-button').addEventListener('click', animate);
 document.getElementById('text-input').addEventListener('input', matchText);
 
 let actions;
@@ -420,6 +343,7 @@ function matchText() {
 
 let graph;
 let graphElement = document.getElementById('graph');
+let svg;
 
 function renderGraph() {
     graph = new Graph();
@@ -430,7 +354,8 @@ function renderGraph() {
     graph.finish();
 
     graphElement.innerHTML = '';
-    graphElement.appendChild(graph.createSVG());
+    svg = graph.createSVG();
+    graphElement.appendChild(svg);
 }
 
 renderGraph();
@@ -448,34 +373,85 @@ document.getElementById('new-word-submit').addEventListener('click', (e) => {
 }, false);
 
 
-function animate(actions) {
+const textProgressElement = document.getElementById('text-progress');
+
+async function animate() {
     let actionIndex = 0;
     let subActionIndex = 0;
+    textProgressElement.style.display = 'block';
+    let progressOffset = 0;
 
-    const animationContinuation = () => {
+    for (let actionIndex = 0; actionIndex < actions.length; actionIndex++) {
+        progressOffset +=  matchResultElement.childNodes[0].childNodes[actionIndex].clientWidth;
+        textProgressElement.style.width = progressOffset + "px";
         let currentAction = actions[actionIndex];
-        animateSubAction(currentAction.char, currentAction.subActions[subActionIndex]);
-        subActionIndex++;
-        if (subActionIndex >= currentAction.subActions.length) {
-            actionIndex++;
-            subActionIndex = 0;
+        for (let subActionIndex = 0; subActionIndex < currentAction.subActions.length; subActionIndex++) {
+            await animateSubAction(currentAction.char, currentAction.subActions[subActionIndex]);
         }
-        if (actionIndex < actions.length) {
-            setTimeout(animationContinuation, 1000);
-        }
-    };
+        await sleep(300);
+    }
+    textProgressElement.style.display = 'none';
+}
 
-    if (actions.length > 0) {
-        animationContinuation();
+async function animateSubAction(char, action) {
+    if (action.drop) {
+        let {posX, posY} = action.node;
+        let text = new Text(posX, posY, char, 'green', 25);
+        text.renderTo(svg);
+        let begin = performance.now();
+        let end = begin + 500;
+        while (true) {
+            let now = await requestAnimationFrame();
+            if (now > end) break;
+            text.updateOpacity((end - now) / 800.0);
+            text.updateTransform(`rotate(${(now - begin) / 40.0}, 50, 50)`);
+        }
+        text.removeFrom(svg);
+        await sleep(500);
+    } else if (action.move) {
+        const from = action.move.from;
+        const to = action.move.to;
+
+        const fromX = from.posX;
+        const fromY = from.posY;
+        const toX = to.posX;
+        const toY = to.posY;
+
+        let text = new Text(fromX, fromY, char, 'green', 25);
+        text.renderTo(svg);
+        let begin = performance.now();
+        let end = begin + 1000;
+        while (true) {
+            let now = await requestAnimationFrame();
+            if (now > end) break;
+            text.updatePosition((fromX - toX) * (end - now) / 1000.0 + toX, (fromY - toY) * (end - now) / 1000.0 + toY);
+        }
+        await sleep(300);
+        text.removeFrom(svg);
+    } else if (action.ending) {
+        (async function () {
+            let {posX, posY} = action.node;
+            let text = new Text(posX, posY, action.ending, 'gray', 25);
+            text.renderTo(svg);
+            let begin = performance.now();
+            let end = begin + 750;
+            while (true) {
+                let now = await requestAnimationFrame();
+                if (now > end) break;
+                text.updateOpacity((end - now) / 100.0);
+                text.updateFontSize(25 + (now - begin) / 40.0);
+                text.updatePosition(posX, posY - (now - begin) / 30.0);
+
+            }
+            text.removeFrom(svg);
+        })()
     }
 }
 
-function animateSubAction(char, action) {
-    if (action.drop) {
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms))
+}
 
-    } else if (action.move) {
-
-    } else if (action.ending) {
-
-    }
+function requestAnimationFrame() {
+    return new Promise(resolve => window.requestAnimationFrame(resolve))
 }
